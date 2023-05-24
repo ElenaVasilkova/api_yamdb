@@ -1,7 +1,5 @@
 from django.shortcuts import render
 from .models import User
+from .serializers import
 
 
-def profile(request):
-    users = User.objects.all()
-    return render(request, 'users/profile.html', {'users': users})

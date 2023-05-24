@@ -65,10 +65,12 @@ class User(AbstractUser):
         ),
         blank=True,
         choices=Role.choices,
+        default='user'
     )
 
     class Meta:
         proxy = True  # If no new field is added.
+        unique_together = ('username', 'email')
 
     def __str__(self):
-        return self.description
+        return self.username

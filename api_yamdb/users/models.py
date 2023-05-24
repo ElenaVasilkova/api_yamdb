@@ -53,9 +53,9 @@ class User(AbstractUser):
     )
 
     class Role(models.TextChoices):
-        USER = _('user')
-        MODERATOR = _('moderator')
-        ADMIN = _('admin')
+        USER = 'user', _('Пользователь')
+        MODERATOR = 'moderator', _('Модератор')
+        ADMIN = 'admin', _('Администратор')
 
     role = models.TextField(
         related_name='role',

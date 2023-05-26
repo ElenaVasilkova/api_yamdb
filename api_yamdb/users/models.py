@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.db import models
 
 
@@ -16,7 +16,6 @@ class User(AbstractUser):
     )
     username_validator = MyValidator()
     username = models.CharField(
-        related_name='username',
         verbose_name='Имя пользователя',
         max_length=150,
         unique=True,
@@ -30,24 +29,20 @@ class User(AbstractUser):
         },
     )
     email = models.EmailField(
-        related_name='email',
         verbose_name='Email',
         max_length=254,
     )
     first_name = models.CharField(
-        related_name='first_name',
         verbose_name='Имя',
         max_length=150,
         blank=True,
     )
     last_name = models.CharField(
-        related_name='last_name',
         verbose_name='Фамилия',
         max_length=150,
         blank=True
     )
     bio = models.TextField(
-        related_name='bio',
         verbose_name='Биография',
         blank=True
     )
@@ -58,7 +53,6 @@ class User(AbstractUser):
         ADMIN = 'admin', _('Администратор')
 
     role = models.TextField(
-        related_name='role',
         verbose_name='Роль пользователя',
         help_text=(
             'Администратор, модератор или пользователь. По умолчанию user.'

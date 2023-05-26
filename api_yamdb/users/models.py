@@ -69,7 +69,6 @@ class User(AbstractUser):
     )
 
     class Meta:
-        proxy = True  # If no new field is added.
         unique_together = ('username', 'email')
 
     def __str__(self):

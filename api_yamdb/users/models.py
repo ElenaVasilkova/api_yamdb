@@ -1,7 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.utils.translation import ugettext_lazy as _
+from django.core import validators
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 
 class MyValidator(UnicodeUsernameValidator):
@@ -16,7 +17,6 @@ class User(AbstractUser):
     )
     username_validator = MyValidator()
     username = models.CharField(
-        related_name='username',
         verbose_name='Имя пользователя',
         max_length=150,
         unique=True,
@@ -30,26 +30,26 @@ class User(AbstractUser):
         },
     )
     email = models.EmailField(
-        related_name='email',
-        verbose_name='Email',
+        verbose_name='Адрес электронной почты',
         max_length=254,
+        unique=True,
+        validators=[validators.EmailValidator(
+            message="Неверный адрес электронной почты"
+        )],
     )
     first_name = models.CharField(
-        related_name='first_name',
         verbose_name='Имя',
         max_length=150,
         blank=True,
     )
     last_name = models.CharField(
-        related_name='last_name',
         verbose_name='Фамилия',
         max_length=150,
-        blank=True
+        blank=True,
     )
     bio = models.TextField(
-        related_name='bio',
         verbose_name='Биография',
-        blank=True
+        blank=True,
     )
 
     class Role(models.TextChoices):
@@ -58,18 +58,19 @@ class User(AbstractUser):
         ADMIN = 'admin', _('Администратор')
 
     role = models.TextField(
-        related_name='role',
         verbose_name='Роль пользователя',
         help_text=(
             'Администратор, модератор или пользователь. По умолчанию user.'
         ),
         blank=True,
         choices=Role.choices,
-        default='user'
+        default='user',
     )
 
     class Meta:
-        proxy = True  # If no new field is added.
+        ordering = ('id',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
         unique_together = ('username', 'email')
 
     def __str__(self):

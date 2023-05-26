@@ -10,7 +10,9 @@ class MyValidator(UnicodeUsernameValidator):
 
 
 class User(AbstractUser):
-    """Полнофункциональная модель пользователя."""
+    """
+    Полнофункциональная модель пользователя.
+    """
 
     description = models.TextField(
         'Детальная информация о пользователе.'
@@ -58,7 +60,7 @@ class User(AbstractUser):
         ADMIN = 'admin', _('Администратор')
 
     role = models.TextField(
-        verbose_name='Роль пользователя',
+        verbose_name='Права доступа',
         help_text=(
             'Администратор, модератор или пользователь. По умолчанию user.'
         ),
@@ -66,12 +68,23 @@ class User(AbstractUser):
         choices=Role.choices,
         default='user',
     )
+    confirmation_code = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name='Confirmation code',
+        default='00000000'
+    )
 
     class Meta:
         ordering = ('id',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         unique_together = ('username', 'email')
+        constraints = [
+            models.UniqueConstraint(
+                fields=["username", "email"], name="unique_user"
+            )
+        ]
 
     def __str__(self):
         return self.username

@@ -56,3 +56,15 @@ class CommentViewSet(viewsets.ModelViewSet):
         except TypeError:
             TypeError('У произведения нет такого отзыва')
         serializer.save(author=self.request.user, review=review)
+
+
+class TitleViewSet:
+    pass
+
+
+class GenreViewSet:
+    pass
+
+
+class CategoryViewSet:
+    pass

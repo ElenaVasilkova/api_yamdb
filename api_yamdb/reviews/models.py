@@ -72,6 +72,9 @@ class User(AbstractUser):
         return self.username
 
 
+CHAR_LIMIT = 20
+
+
 class Category(models.Model):
     name = models.CharField(verbose_name='Category', max_length=256)
     slug = models.SlugField(
@@ -185,7 +188,7 @@ class Review(models.Model):
         ]
 
     def __str__(self):
-        return self.text
+        return self.text[:CHAR_LIMIT]
 
 
 class Comment(models.Model):
@@ -216,4 +219,4 @@ class Comment(models.Model):
         ordering = ['-pub_date']
 
     def __str__(self):
-        return self.text
+        return self.text[:CHAR_LIMIT]

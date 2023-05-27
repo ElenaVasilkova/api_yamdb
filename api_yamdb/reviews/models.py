@@ -75,6 +75,9 @@ class User(AbstractUser):
 CHAR_LIMIT = 20
 
 
+CHAR_LIMIT = 20
+
+
 class Category(models.Model):
     name = models.CharField(verbose_name='Category', max_length=256)
     slug = models.SlugField(

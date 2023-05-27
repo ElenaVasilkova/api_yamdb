@@ -4,6 +4,8 @@ from django.db import models
 
 from .validators import validate_username, validate_year
 
+CHAR_LIMIT = 20
+
 USER = 'user'
 ADMIN = 'admin'
 MODERATOR = 'moderator'
@@ -70,15 +72,6 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
-
-
-CHAR_LIMIT = 20
-
-
-CHAR_LIMIT = 20
-
-
-CHAR_LIMIT = 20
 
 
 class Category(models.Model):

@@ -1,8 +1,75 @@
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from users.models import User
 
-from .validators import validate_year
+from .validators import validate_username, validate_year
+
+USER = 'user'
+ADMIN = 'admin'
+MODERATOR = 'moderator'
+
+ROLE_CHOICES = [
+    (USER, USER),
+    (ADMIN, ADMIN),
+    (MODERATOR, MODERATOR),
+]
+
+
+class User(AbstractUser):
+    username = models.CharField(
+        validators=(validate_username,),
+        max_length=150,
+        unique=True,
+        blank=False,
+        null=False
+    )
+    email = models.EmailField(
+        max_length=254,
+        unique=True,
+        blank=False,
+        null=False
+    )
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default=USER,
+        blank=True
+    )
+    bio = models.TextField(
+        blank=True,
+    )
+    first_name = models.CharField(
+        max_length=150,
+        blank=True
+    )
+    last_name = models.CharField(
+        max_length=150,
+        blank=True
+    )
+    confirmation_code = models.CharField(
+        max_length=255,
+        null=True,
+        blank=False,
+        default='XXXX'
+    )
+
+    @property
+    def is_user(self):
+        return self.role == USER
+
+    @property
+    def is_admin(self):
+        return self.role == ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR
+
+    class Meta:
+        ordering = ('id',)
+
+    def __str__(self):
+        return self.username
 
 
 class Category(models.Model):
@@ -48,7 +115,7 @@ class Title(models.Model):
     genre = models.ManyToManyField(
         Genre, through='GenreTitle', verbose_name='Жанр', db_index=True
     )
-    rating = models.IntegerField(
+    score = models.IntegerField(
         verbose_name='Rating', null=True, default=None, db_index=True
     )
 

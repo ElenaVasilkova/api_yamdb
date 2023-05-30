@@ -41,20 +41,13 @@ class UsersViewSet(viewsets.ModelViewSet):
     def get_current_user_info(self, request):
         serializer = UsersSerializer(request.user)
         if request.method == 'PATCH':
-            if request.user.is_admin:
-                serializer = UsersSerializer(
-                    request.user,
-                    data=request.data,
-                    partial=True)
-            else:
-                serializer = NotAdminSerializer(
-                    request.user,
-                    data=request.data,
-                    partial=True)
+            serializer = NotAdminSerializer(
+                request.user,
+                data=request.data,
+                partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-
         return Response(serializer.data)
 
 
@@ -164,8 +157,7 @@ class CommentViewSet(viewsets.ModelViewSet):
             review = title.reviews.get(id=self.kwargs.get('review_id'))
         except TypeError:
             TypeError('У произведения нет такого отзыва')
-        queryset = review.comments.all()
-        return queryset
+        return review.comments.all()
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))

@@ -39,7 +39,7 @@ router.register(
 )
 
 urlpatterns = [
-    path('/auth/token/', GetToken.as_view(), name='get_token'),
-    path('/auth/signup/', Signup.as_view(), name='signup'),
-    path('/', include(router.urls)),
+    path('v1/auth/token/', GetToken.as_view(), name='get_token'),
+    path('v1/auth/signup/', Signup.as_view(), name='signup'),
+    path('v1/', include(router.urls)),
 ]

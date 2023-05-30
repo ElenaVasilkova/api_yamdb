@@ -16,7 +16,7 @@ class UsersSerializer(serializers.ModelSerializer):
             'role')
 
 
-class NotAdminSerializer(serializers.ModelSerializer):
+class NotAdminSerializer(UsersSerializer):
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',

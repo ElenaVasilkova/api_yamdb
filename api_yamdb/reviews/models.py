@@ -18,41 +18,51 @@ ROLE_CHOICES = [
 
 
 class User(AbstractUser):
+    """
+    Полнофункциональная модель пользователя.
+    """
     username = models.CharField(
         validators=(validate_username,),
         max_length=150,
         unique=True,
         blank=False,
-        null=False
+        null=False,
+        verbose_name='Имя пользователя',
     )
     email = models.EmailField(
         max_length=254,
         unique=True,
         blank=False,
-        null=False
+        null=False,
+        verbose_name='Адрес электронной почты',
     )
     role = models.CharField(
         max_length=20,
         choices=ROLE_CHOICES,
         default=USER,
-        blank=True
+        blank=True,
+        verbose_name='Права доступа',
     )
     bio = models.TextField(
         blank=True,
+        verbose_name='Биография',
     )
     first_name = models.CharField(
         max_length=150,
-        blank=True
+        blank=True,
+        verbose_name='Имя',
     )
     last_name = models.CharField(
         max_length=150,
-        blank=True
+        blank=True,
+        verbose_name='Фамилия',
     )
     confirmation_code = models.CharField(
         max_length=255,
         null=True,
         blank=False,
-        default='XXXX'
+        default='XXXX',
+        verbose_name='Confirmation code',
     )
 
     @property
@@ -69,6 +79,8 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ('id',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
     def __str__(self):
         return self.username

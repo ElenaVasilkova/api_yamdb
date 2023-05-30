@@ -1,3 +1,4 @@
+from api.filters import TitleFilter
 from django.core.mail import EmailMessage
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
@@ -5,23 +6,23 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
+from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
+                                   ListModelMixin)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
-                                   ListModelMixin)
-from rest_framework.viewsets import GenericViewSet
 from reviews.models import Category, Genre, Title, User
-from api.filters import TitleFilter
-from .permissions import (AdminModeratorAuthorPermission, Admin,
+
+from .permissions import (Admin, AdminModeratorAuthorPermission,
                           IsAdminUserOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, GetTokenSerializer,
                           NotAdminSerializer, ReviewSerializer,
                           SignUpSerializer, TitleReadSerializer,
                           TitleWriteSerializer, UsersSerializer)
+from ..reviews.models import Comment
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -29,8 +30,8 @@ class UsersViewSet(viewsets.ModelViewSet):
     serializer_class = UsersSerializer
     permission_classes = (IsAuthenticated, Admin,)
     lookup_field = 'username'
-    filter_backends = (SearchFilter, )
-    search_fields = ('username', )
+    filter_backends = (SearchFilter,)
+    search_fields = ('username',)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     @action(
@@ -41,20 +42,13 @@ class UsersViewSet(viewsets.ModelViewSet):
     def get_current_user_info(self, request):
         serializer = UsersSerializer(request.user)
         if request.method == 'PATCH':
-            if request.user.is_admin:
-                serializer = UsersSerializer(
-                    request.user,
-                    data=request.data,
-                    partial=True)
-            else:
-                serializer = NotAdminSerializer(
-                    request.user,
-                    data=request.data,
-                    partial=True)
+            serializer = NotAdminSerializer(
+                request.user,
+                data=request.data,
+                partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-
         return Response(serializer.data)
 
 
@@ -80,7 +74,6 @@ class GetToken(APIView):
 
 
 class Signup(APIView):
-
     permission_classes = (permissions.AllowAny,)
 
     @staticmethod
@@ -119,33 +112,30 @@ class Signup(APIView):
 
 class CategoryViewSet(CreateModelMixin, ListModelMixin,
                       DestroyModelMixin, GenericViewSet):
-
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminUserOrReadOnly,)
-    filter_backends = (SearchFilter, )
-    search_fields = ('name', )
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
     lookup_field = 'slug'
 
 
 class GenreViewSet(CreateModelMixin, ListModelMixin,
                    DestroyModelMixin, GenericViewSet):
-
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminUserOrReadOnly,)
     filter_backends = (SearchFilter,)
-    search_fields = ('name', )
+    search_fields = ('name',)
     lookup_field = 'slug'
 
 
 class TitleViewSet(ModelViewSet):
-
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
     ).all()
     permission_classes = (IsAdminUserOrReadOnly,)
-    filter_backends = (DjangoFilterBackend, )
+    filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
 
     def get_serializer_class(self):
@@ -159,21 +149,10 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (AdminModeratorAuthorPermission,)
 
     def get_queryset(self):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        try:
-            review = title.reviews.get(id=self.kwargs.get('review_id'))
-        except TypeError:
-            TypeError('У произведения нет такого отзыва')
-        queryset = review.comments.all()
-        return queryset
+        return Comment.objects.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
-        try:
-            review = title.reviews.get(id=self.kwargs.get('review_id'))
-        except TypeError:
-            TypeError('У произведения нет такого отзыва')
-        serializer.save(author=self.request.user, review=review)
+        serializer.save(author=self.request.user)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

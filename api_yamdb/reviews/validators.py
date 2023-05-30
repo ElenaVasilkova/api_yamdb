@@ -1,5 +1,6 @@
 import datetime as dt
 import re
+
 from django.core.exceptions import ValidationError
 
 
@@ -10,7 +11,7 @@ def validate_year(value):
 
 
 def validate_username(value):
-    if value == 'me':
+    if re.search(r'^me$', value):
         raise ValidationError(
             ('Имя <me> служебное.'),
             params={'value': value},

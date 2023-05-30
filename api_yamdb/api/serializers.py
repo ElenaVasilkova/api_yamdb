@@ -101,7 +101,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     def validate_score(self, value):
-        if 0 > value > 10:
+        if value < 0 or value > 10:
             raise serializers.ValidationError('Оценка по 10-бальной шкале!')
         return value
 
@@ -133,5 +133,31 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
         model = Comment
+        fields = '__all__'
+
+    def get_queryset(self):
+        title_id = self.context.get('view').kwargs.get('title_id')
+        review_id = self.context.get('view').kwargs.get('review_id')
+        try:
+            title = Title.objects.get(id=title_id)
+            review = title.reviews.get(id=review_id)
+        except (Title.DoesNotExist, Review.DoesNotExist):
+            raise serializers.ValidationError(
+                'У произведения нет такого отзыва'
+            )
+        return review.comments.all()
+
+    def create(self, validated_data):
+        title_id = self.context.get('view').kwargs.get('title_id')
+        review_id = self.context.get('view').kwargs.get('review_id')
+        try:
+            title = Title.objects.get(id=title_id)
+            review = title.reviews.get(id=review_id)
+        except (Title.DoesNotExist, Review.DoesNotExist):
+            raise serializers.ValidationError(
+                'У произведения нет такого отзыва'
+            )
+        validated_data['author'] = self.context['request'].user
+        validated_data['review'] = review
+        return super().create(validated_data)

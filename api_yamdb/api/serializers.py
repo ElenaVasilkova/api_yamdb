@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import serializers
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
@@ -43,6 +44,18 @@ class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'username')
+
+    def validate_email(self, value):
+        email = value.lower()
+        if User.objects.filter(email=email).exists():
+            raise ValidationError('Пользователь уже существует')
+        return email
+
+    def validate_username(self, value):
+        username = value.lower()
+        if User.objects.filter(username=username).exists():
+            raise ValidationError('Пользователь уже существует')
+        return username
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -88,6 +101,14 @@ class TitleWriteSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Title
+
+    def validate_year(self, value):
+        now = timezone.now().year
+        if value > now:
+            raise ValidationError(
+                f'{value} не может быть больше {now}!'
+            )
+        return value
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -136,28 +157,14 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = '__all__'
 
-    def get_queryset(self):
-        title_id = self.context.get('view').kwargs.get('title_id')
-        review_id = self.context.get('view').kwargs.get('review_id')
-        try:
-            title = Title.objects.get(id=title_id)
-            review = title.reviews.get(id=review_id)
-        except (Title.DoesNotExist, Review.DoesNotExist):
-            raise serializers.ValidationError(
-                'У произведения нет такого отзыва'
-            )
-        return review.comments.all()
-
     def create(self, validated_data):
         title_id = self.context.get('view').kwargs.get('title_id')
         review_id = self.context.get('view').kwargs.get('review_id')
-        try:
-            title = Title.objects.get(id=title_id)
-            review = title.reviews.get(id=review_id)
-        except (Title.DoesNotExist, Review.DoesNotExist):
-            raise serializers.ValidationError(
-                'У произведения нет такого отзыва'
-            )
+
+        title = get_object_or_404(Title, id=title_id)
+        review = get_object_or_404(Review, title=title, id=review_id)
+
         validated_data['author'] = self.context['request'].user
         validated_data['review'] = review
+
         return super().create(validated_data)

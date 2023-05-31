@@ -184,8 +184,12 @@ class Review(models.Model):
         'Оценка',
         default=0,
         validators=[
-            MaxValueValidator(10),
-            MinValueValidator(1)
+            MaxValueValidator(
+                10, message='Максимальное значение оценки - %(limit_value)s'
+            ),
+            MinValueValidator(
+                1, message='Минимальное значение оценки - %(limit_value)s'
+            )
         ],
     )
 

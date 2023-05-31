@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
-from reviews.models import Category, Genre, Title, User
+from reviews.models import Category, Genre, Review, Title, User
 
 from .permissions import (Admin, AdminModeratorAuthorPermission,
                           IsAdminUserOrReadOnly)
@@ -22,7 +22,11 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           NotAdminSerializer, ReviewSerializer,
                           SignUpSerializer, TitleReadSerializer,
                           TitleWriteSerializer, UsersSerializer)
-from ..reviews.models import Comment
+
+
+class CustomViewSet(CreateModelMixin, ListModelMixin,
+                    DestroyModelMixin, GenericViewSet):
+    pass
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -87,14 +91,10 @@ class Signup(APIView):
 
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
-        empty_response = {"email": ["string"], "username": ["string"]}
-        try:
-            user = request.data["username"]
-            mail = request.data["email"]
-            if User.objects.filter(username=user, email=mail).exists():
-                return Response(status=status.HTTP_200_OK)
-        except Exception:
-            return Response(empty_response, status=status.HTTP_400_BAD_REQUEST)
+        user = request.data.get("username")
+        mail = request.data.get("email")
+        if User.objects.filter(username=user, email=mail).exists():
+            return Response(status=status.HTTP_200_OK)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         email_body = (
@@ -110,8 +110,7 @@ class Signup(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CategoryViewSet(CreateModelMixin, ListModelMixin,
-                      DestroyModelMixin, GenericViewSet):
+class CategoryViewSet(CustomViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminUserOrReadOnly,)
@@ -120,8 +119,7 @@ class CategoryViewSet(CreateModelMixin, ListModelMixin,
     lookup_field = 'slug'
 
 
-class GenreViewSet(CreateModelMixin, ListModelMixin,
-                   DestroyModelMixin, GenericViewSet):
+class GenreViewSet(CustomViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminUserOrReadOnly,)
@@ -149,10 +147,16 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (AdminModeratorAuthorPermission,)
 
     def get_queryset(self):
-        return Comment.objects.all()
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(Review, title_id=title_id, id=review_id)
+        return review.comments.all()
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(Review, title_id=title_id, id=review_id)
+        serializer.save(author=self.request.user, review=review)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

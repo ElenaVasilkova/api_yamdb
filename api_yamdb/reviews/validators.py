@@ -1,13 +1,20 @@
-import datetime as dt
 import re
 
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 
 def validate_year(value):
-    if dt.date.today().year < value:
-        raise ValidationError('Wrong year!')
-    return value
+    """
+    Проверка на корректность года
+    выхода произведения.
+    """
+
+    now = timezone.now().year
+    if value > now:
+        raise ValidationError(
+            f'{value} не может быть больше {now}!'
+        )
 
 
 def validate_username(value):
@@ -21,3 +28,4 @@ def validate_username(value):
             (f'Не допустимые символы <{value}> в нике.'),
             params={'value': value},
         )
+ 

@@ -136,28 +136,14 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = '__all__'
 
-    def get_queryset(self):
-        title_id = self.context.get('view').kwargs.get('title_id')
-        review_id = self.context.get('view').kwargs.get('review_id')
-        try:
-            title = Title.objects.get(id=title_id)
-            review = title.reviews.get(id=review_id)
-        except (Title.DoesNotExist, Review.DoesNotExist):
-            raise serializers.ValidationError(
-                'У произведения нет такого отзыва'
-            )
-        return review.comments.all()
-
     def create(self, validated_data):
         title_id = self.context.get('view').kwargs.get('title_id')
         review_id = self.context.get('view').kwargs.get('review_id')
-        try:
-            title = Title.objects.get(id=title_id)
-            review = title.reviews.get(id=review_id)
-        except (Title.DoesNotExist, Review.DoesNotExist):
-            raise serializers.ValidationError(
-                'У произведения нет такого отзыва'
-            )
+
+        title = get_object_or_404(Title, id=title_id)
+        review = get_object_or_404(Review, title=title, id=review_id)
+
         validated_data['author'] = self.context['request'].user
         validated_data['review'] = review
+
         return super().create(validated_data)

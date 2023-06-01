@@ -19,10 +19,7 @@ class UsersSerializer(serializers.ModelSerializer):
 
 
 class NotAdminSerializer(UsersSerializer):
-    class Meta:
-        model = User
-        fields = ('username', 'email', 'first_name',
-                  'last_name', 'bio', 'role')
+    class Meta(UsersSerializer.Meta):
         read_only_fields = ('role',)
 
 
@@ -157,15 +154,3 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = '__all__'
-
-    def create(self, validated_data):
-        title_id = self.context.get('view').kwargs.get('title_id')
-        review_id = self.context.get('view').kwargs.get('review_id')
-
-        title = get_object_or_404(Title, id=title_id)
-        review = get_object_or_404(Review, title=title, id=review_id)
-
-        validated_data['author'] = self.context['request'].user
-        validated_data['review'] = review
-
-        return super().create(validated_data)

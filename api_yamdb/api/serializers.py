@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Title, User
-from .validators import not_me_username_validator, username_validator
+from reviews.validators import validate_username, username_validator
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -44,7 +44,7 @@ class SignUpSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=150,
         required=True,
-        validators=[not_me_username_validator, username_validator],
+        validators=[validate_username, username_validator],
     )
     email = serializers.EmailField(
         max_length=254,
@@ -70,7 +70,6 @@ class SignUpSerializer(serializers.Serializer):
     def create(self, validated_data):
         username = validated_data.get('username')
         email = validated_data.get('email')
-        # Пересоздаем запись в базе если точно такой же пользователь уже есть
         User.objects.filter(username=username, email=email).delete()
         return User.objects.create(email=email, username=username)
 

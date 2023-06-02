@@ -1,4 +1,3 @@
-from api.filters import TitleFilter
 from django.core.mail import EmailMessage
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
@@ -15,6 +14,7 @@ from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Review, Title, User
+from .filters import TitleFilter
 from .permissions import (Admin, AdminModeratorAuthorPermission,
                           IsAdminUserOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
@@ -30,7 +30,6 @@ class CustomViewSet(CreateModelMixin, ListModelMixin,
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    pass
 
 
 class UsersViewSet(viewsets.ModelViewSet):

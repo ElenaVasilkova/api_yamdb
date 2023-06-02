@@ -26,6 +26,10 @@ from .serializers import (CategorySerializer, CommentSerializer,
 
 class CustomViewSet(CreateModelMixin, ListModelMixin,
                     DestroyModelMixin, GenericViewSet):
+    permission_classes = (IsAdminUserOrReadOnly,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
     pass
 
 
@@ -91,10 +95,6 @@ class Signup(APIView):
 
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
-        user = request.data.get("username")
-        mail = request.data.get("email")
-        if User.objects.filter(username=user, email=mail).exists():
-            return Response(status=status.HTTP_200_OK)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         email_body = (
@@ -113,19 +113,11 @@ class Signup(APIView):
 class CategoryViewSet(CustomViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminUserOrReadOnly,)
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
 class GenreViewSet(CustomViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminUserOrReadOnly,)
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
 class TitleViewSet(ModelViewSet):

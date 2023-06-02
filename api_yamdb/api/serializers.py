@@ -1,9 +1,11 @@
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Title, User
+from .validators import not_me_username_validator, username_validator
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -37,23 +39,40 @@ class GetTokenSerializer(serializers.ModelSerializer):
         )
 
 
-class SignUpSerializer(serializers.ModelSerializer):
+class SignUpSerializer(serializers.Serializer):
 
-    class Meta:
-        model = User
-        fields = ('email', 'username')
+    username = serializers.CharField(
+        max_length=150,
+        required=True,
+        validators=[not_me_username_validator, username_validator],
+    )
+    email = serializers.EmailField(
+        max_length=254,
+        required=True,
+    )
 
-    def validate_email(self, value):
-        email = value.lower()
-        if User.objects.filter(email=email).exists():
-            raise ValidationError('Пользователь уже существует')
-        return email
+    def validate(self, data):
+        if not User.objects.filter(
+            username=data.get("username"), email=data.get("email")
+        ).exists():
+            if User.objects.filter(username=data.get("username")):
+                raise serializers.ValidationError(
+                    "Пользователь с таким username уже существует"
+                )
 
-    def validate_username(self, value):
-        username = value.lower()
-        if User.objects.filter(username=username).exists():
-            raise ValidationError('Пользователь уже существует')
-        return username
+            if User.objects.filter(email=data.get("email")):
+                raise serializers.ValidationError(
+                    "Пользователь с таким Email уже существует"
+                )
+
+        return data
+
+    def create(self, validated_data):
+        username = validated_data.get('username')
+        email = validated_data.get('email')
+        # Пересоздаем запись в базе если точно такой же пользователь уже есть
+        User.objects.filter(username=username, email=email).delete()
+        return User.objects.create(email=email, username=username)
 
 
 class CategorySerializer(serializers.ModelSerializer):

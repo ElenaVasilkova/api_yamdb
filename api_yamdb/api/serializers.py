@@ -5,6 +5,8 @@ from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
+from reviews.validators import validate_username, username_validator
+
 
 class UsersSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,23 +39,37 @@ class GetTokenSerializer(serializers.ModelSerializer):
         )
 
 
-class SignUpSerializer(serializers.ModelSerializer):
+class SignUpSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=150,
+        required=True,
+        validators=[validate_username, username_validator],
+    )
+    email = serializers.EmailField(
+        max_length=254,
+        required=True,
+    )
 
-    class Meta:
-        model = User
-        fields = ('email', 'username')
+    def validate(self, data):
+        if not User.objects.filter(
+            username=data.get("username"), email=data.get("email")
+        ).exists():
+            if User.objects.filter(username=data.get("username")):
+                raise serializers.ValidationError(
+                    "Пользователь с таким username уже существует"
+                )
+            if User.objects.filter(email=data.get("email")):
+                raise serializers.ValidationError(
+                    "Пользователь с таким Email уже существует"
+                )
+        return data
 
-    def validate_email(self, value):
-        email = value.lower()
-        if User.objects.filter(email=email).exists():
-            raise ValidationError('Пользователь уже существует')
-        return email
-
-    def validate_username(self, value):
-        username = value.lower()
-        if User.objects.filter(username=username).exists():
-            raise ValidationError('Пользователь уже существует')
-        return username
+    def create(self, validated_data):
+        username = validated_data.get('username')
+        email = validated_data.get('email')
+        # Пересоздаем запись в базе если точно такой же пользователь уже есть
+        User.objects.filter(username=username, email=email).delete()
+        return User.objects.create(email=email, username=username)
 
 
 class CategorySerializer(serializers.ModelSerializer):

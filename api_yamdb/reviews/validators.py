@@ -1,7 +1,10 @@
 import re
 
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+
+username_validator = UnicodeUsernameValidator()
 
 
 def validate_year(value):
@@ -18,10 +21,9 @@ def validate_year(value):
 
 
 def validate_username(value):
-    if re.search(r'^me$', value):
+    if value.lower() == "me":
         raise ValidationError(
-            ('Имя <me> служебное.'),
-            params={'value': value},
+            "Имя 'me' не разрешено для использования."
         )
     if re.search(r'^[a-zA-Z][a-zA-Z0-9-_\.]{1,20}$', value) is None:
         raise ValidationError(

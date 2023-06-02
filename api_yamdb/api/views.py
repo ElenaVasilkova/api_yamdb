@@ -26,7 +26,10 @@ from .serializers import (CategorySerializer, CommentSerializer,
 
 class CustomViewSet(CreateModelMixin, ListModelMixin,
                     DestroyModelMixin, GenericViewSet):
-    pass
+    permission_classes = (IsAdminUserOrReadOnly,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
 
 
 class UsersViewSet(viewsets.ModelViewSet):

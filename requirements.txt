@@ -4,7 +4,7 @@ attrs==23.1.0
 certifi==2023.5.7
 charset-normalizer==2.0.12
 colorama==0.4.6
-Django==3.2
+Django==3.2.25
 django-filter==23.2
 djangorestframework==3.12.4
 djangorestframework-simplejwt==5.2.2
